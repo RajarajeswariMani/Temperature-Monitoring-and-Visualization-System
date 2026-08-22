@@ -1,0 +1,66 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'background': '#ffffff',
+    'primaryColor': '#ffffff',
+    'primaryBorderColor': '#000000',
+    'primaryTextColor': '#000000',
+    'lineColor': '#000000',
+    'secondaryColor': '#ffffff',
+    'tertiaryColor': '#ffffff',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000',
+    'edgeLabelBackground': '#ffffff',
+    'mainBkg': '#ffffff',
+    'nodeTextColor': '#000000',
+    'noteBkgColor': '#ffffff',
+    'noteBorderColor': '#000000',
+    'noteTextColor': '#000000',
+    'actorBkg': '#ffffff',
+    'actorBorder': '#000000',
+    'actorTextColor': '#000000',
+    'actorLineColor': '#000000',
+    'signalColor': '#000000',
+    'signalTextColor': '#000000',
+    'labelBoxBkgColor': '#ffffff',
+    'labelBoxBorderColor': '#000000',
+    'labelTextColor': '#000000',
+    'loopTextColor': '#000000',
+    'activationBkgColor': '#ffffff',
+    'activationBorderColor': '#000000',
+    'sequenceNumberColor': '#000000',
+    'classText': '#000000',
+    'altBackground': '#ffffff',
+    'fontFamily': 'Helvetica'
+  }
+}}%%
+
+graph TB
+
+    TITLE["C SOFTWARE STATIC ARCHITECTURE<br/>Bare-Metal Implementation"]
+
+    subgraph HAL["HARDWARE ABSTRACTION / MOCKS"]
+        ADC["ADC<br/>adc.h / adc.c"]
+        GPIO["GPIO<br/>gpio.h / gpio.c"]
+        EEPROM["EEPROM<br/>eeprom.h / eeprom.c"]
+    end
+
+    subgraph APP["C APPLICATION SOFTWARE"]
+        ISR["Timer ISR<br/>ISR_Timer100us_Handler()"]
+        MON["Sample Management<br/>ISR latch + sample-ready flag"]
+        MAIN["Application / Main Loop<br/>main.c"]
+        SENSOR["Temperature Sensor<br/>TempSensor_ConvertRawToCelsius()"]
+        CLASSIFY["Temperature Classification"]
+        LED["LED Controller"]
+    end
+
+    ADC --> ISR
+    ISR -->|"Latch raw value + set flag"| MON
+    MON --> MAIN
+    MAIN --> SENSOR
+    SENSOR --> CLASSIFY
+    CLASSIFY --> LED
+    GPIO --> LED
+    EEPROM --> MAIN
+
+    TITLE --> APP

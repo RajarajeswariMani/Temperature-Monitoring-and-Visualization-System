@@ -1,0 +1,195 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'background': '#ffffff',
+    'primaryColor': '#ffffff',
+    'primaryBorderColor': '#000000',
+    'primaryTextColor': '#000000',
+    'lineColor': '#000000',
+    'secondaryColor': '#ffffff',
+    'tertiaryColor': '#ffffff',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000',
+    'edgeLabelBackground': '#ffffff',
+    'mainBkg': '#ffffff',
+    'nodeTextColor': '#000000',
+    'noteBkgColor': '#ffffff',
+    'noteBorderColor': '#000000',
+    'noteTextColor': '#000000',
+    'actorBkg': '#ffffff',
+    'actorBorder': '#000000',
+    'actorTextColor': '#000000',
+    'actorLineColor': '#000000',
+    'signalColor': '#000000',
+    'signalTextColor': '#000000',
+    'labelBoxBkgColor': '#ffffff',
+    'labelBoxBorderColor': '#000000',
+    'labelTextColor': '#000000',
+    'loopTextColor': '#000000',
+    'activationBkgColor': '#ffffff',
+    'activationBorderColor': '#000000',
+    'sequenceNumberColor': '#000000',
+    'classText': '#000000',
+    'altBackground': '#ffffff',
+    'fontFamily': 'Helvetica'
+  }
+}}%%
+
+classDiagram
+
+    class IAdc {
+        <<interface>>
+        +init() void
+        +readRaw() uint16_t
+    }
+
+    class IGpio {
+        <<interface>>
+        +init() void
+        +setLed(LedId, bool) void
+        +getLed(LedId) bool
+    }
+
+    class IEeprom {
+        <<interface>>
+        +init() void
+        +readConfig(HwConfig&) bool
+    }
+
+
+    class MockAdc {
+        +init() void
+        +readRaw() uint16_t
+        +setMockValue(uint16_t) void
+    }
+
+    class MockGpio {
+        +init() void
+        +setLed(LedId, bool) void
+        +getLed(LedId) bool
+    }
+
+    class MockEeprom {
+        +init() void
+        +readConfig(HwConfig&) bool
+        +setMockConfig(HwRevision, string) void
+    }
+
+
+    IAdc <|.. MockAdc
+    IGpio <|.. MockGpio
+    IEeprom <|.. MockEeprom
+
+
+    class ISensorResolutionStrategy {
+        <<interface>>
+        +convert(uint16_t) float
+    }
+
+    class RevAResolutionStrategy {
+        +convert(uint16_t) float
+    }
+
+    class RevBResolutionStrategy {
+        +convert(uint16_t) float
+    }
+
+    ISensorResolutionStrategy <|.. RevAResolutionStrategy
+    ISensorResolutionStrategy <|.. RevBResolutionStrategy
+
+
+    class TemperatureSensor {
+        -adc_ : IAdc&
+        -strategy_ : unique_ptr~ISensorResolutionStrategy~
+        +TemperatureSensor(IAdc&, unique_ptr~ISensorResolutionStrategy~)
+        +sampleCelsius() float
+        +convert(uint16_t) float
+    }
+
+    TemperatureSensor --> IAdc : ADC dependency
+
+    TemperatureSensor *-- ISensorResolutionStrategy : owns strategy
+
+
+    class TempStatus {
+        <<enumeration>>
+        Ok
+        Warning
+        Critical
+    }
+
+
+    class TemperatureClassifier {
+        <<static>>
+        +kWarningC : float
+        +kCriticalHiC : float
+        +kCriticalLoC : float
+        +classify(float) TempStatus
+    }
+
+    TemperatureClassifier --> TempStatus
+
+
+    class LedController {
+        -gpio_ : IGpio&
+        +LedController(IGpio&)
+        +update(TempStatus) void
+    }
+
+    LedController --> IGpio : GPIO dependency
+
+    LedController --> TempStatus
+
+
+    class TemperatureMonitor {
+        -adc_ : IAdc&
+        -sensor_ : TemperatureSensor&
+        -ledController_ : LedController&
+        -latchedRaw_ : uint16_t
+        -sampleReady_ : atomic_bool
+        -lastTemperatureC_ : float
+        -lastStatus_ : TempStatus
+
+        +TemperatureMonitor(IAdc&, TemperatureSensor&, LedController&)
+        +onTimerTick() void
+        +isSampleReady() bool
+        +processPendingSample() void
+        +lastTemperatureC() float
+        +lastStatus() TempStatus
+    }
+
+
+    TemperatureMonitor --> IAdc : ADC dependency
+
+    TemperatureMonitor --> TemperatureSensor
+
+    TemperatureMonitor --> LedController
+
+    TemperatureMonitor ..> TemperatureClassifier : classifies temperature
+
+
+    class TimerIsr {
+        <<free functions>>
+        +TimerIsr_RegisterMonitor(TemperatureMonitor*) void
+        +isr_timer_100us_handler() void
+    }
+
+    TimerIsr --> TemperatureMonitor : calls onTimerTick()
+
+
+    class HwRevision {
+        <<enumeration>>
+        RevA
+        RevB
+    }
+
+
+    class HwConfig {
+        +revision : HwRevision
+        +serialNumber : string
+    }
+
+
+    IEeprom ..> HwConfig : provides configuration
+
+    HwConfig --> HwRevision

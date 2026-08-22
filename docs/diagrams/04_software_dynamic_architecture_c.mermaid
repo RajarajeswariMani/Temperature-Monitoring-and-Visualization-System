@@ -1,0 +1,91 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'background': '#ffffff',
+    'primaryColor': '#ffffff',
+    'primaryBorderColor': '#000000',
+    'primaryTextColor': '#000000',
+    'lineColor': '#000000',
+    'secondaryColor': '#ffffff',
+    'tertiaryColor': '#ffffff',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000',
+    'edgeLabelBackground': '#ffffff',
+    'mainBkg': '#ffffff',
+    'nodeTextColor': '#000000',
+    'noteBkgColor': '#ffffff',
+    'noteBorderColor': '#000000',
+    'noteTextColor': '#000000',
+    'actorBkg': '#ffffff',
+    'actorBorder': '#000000',
+    'actorTextColor': '#000000',
+    'actorLineColor': '#000000',
+    'signalColor': '#000000',
+    'signalTextColor': '#000000',
+    'labelBoxBkgColor': '#ffffff',
+    'labelBoxBorderColor': '#000000',
+    'labelTextColor': '#000000',
+    'loopTextColor': '#000000',
+    'activationBkgColor': '#ffffff',
+    'activationBorderColor': '#000000',
+    'sequenceNumberColor': '#000000',
+    'classText': '#000000',
+    'altBackground': '#ffffff',
+    'fontFamily': 'Helvetica'
+  }
+}}%%
+
+sequenceDiagram
+
+    participant TIMER as Timer Peripheral
+    participant ISR as isr.c
+    participant ADC as adc.c
+    participant STATE as ISR Shared State
+    participant MAIN as main.c
+    participant SENSOR as temp_sensor.c
+    participant CLASS as temperature_classifier.c
+    participant LED as led_controller.c
+    participant GPIO as gpio.c
+
+    Note over TIMER,STATE: INTERRUPT CONTEXT - every 100 µs
+
+    TIMER->>ISR: Timer interrupt
+
+    ISR->>ADC: ADC_ReadRaw()
+    ADC-->>ISR: Raw ADC value
+
+    ISR->>STATE: Latch raw ADC value
+    ISR->>STATE: Set sample-ready flag
+
+    ISR-->>TIMER: Return from ISR
+
+    Note over MAIN,GPIO: MAIN-LOOP CONTEXT
+
+    loop Application main loop
+
+        MAIN->>STATE: Check sample-ready flag
+
+        alt Sample ready
+
+            MAIN->>STATE: Read latched raw value
+            MAIN->>STATE: Clear sample-ready flag
+
+            MAIN->>SENSOR: Convert raw value
+            SENSOR-->>MAIN: Temperature °C
+
+            MAIN->>CLASS: Classify temperature
+            CLASS-->>MAIN: TempStatus
+
+            MAIN->>LED: Update LED status
+
+            LED->>GPIO: GPIO_SetLed(Green, state)
+            LED->>GPIO: GPIO_SetLed(Yellow, state)
+            LED->>GPIO: GPIO_SetLed(Red, state)
+
+        else No sample ready
+
+            MAIN->>MAIN: Continue main loop
+
+        end
+
+    end

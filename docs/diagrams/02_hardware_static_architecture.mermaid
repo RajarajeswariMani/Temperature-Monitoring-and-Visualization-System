@@ -1,0 +1,61 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'background': '#ffffff',
+    'primaryColor': '#ffffff',
+    'primaryBorderColor': '#000000',
+    'primaryTextColor': '#000000',
+    'lineColor': '#000000',
+    'secondaryColor': '#ffffff',
+    'tertiaryColor': '#ffffff',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000',
+    'edgeLabelBackground': '#ffffff',
+    'mainBkg': '#ffffff',
+    'nodeTextColor': '#000000',
+    'noteBkgColor': '#ffffff',
+    'noteBorderColor': '#000000',
+    'noteTextColor': '#000000',
+    'actorBkg': '#ffffff',
+    'actorBorder': '#000000',
+    'actorTextColor': '#000000',
+    'actorLineColor': '#000000',
+    'signalColor': '#000000',
+    'signalTextColor': '#000000',
+    'labelBoxBkgColor': '#ffffff',
+    'labelBoxBorderColor': '#000000',
+    'labelTextColor': '#000000',
+    'loopTextColor': '#000000',
+    'activationBkgColor': '#ffffff',
+    'activationBorderColor': '#000000',
+    'sequenceNumberColor': '#000000',
+    'classText': '#000000',
+    'altBackground': '#ffffff',
+    'fontFamily': 'Helvetica'
+  }
+}}%%
+
+graph TB
+
+    TITLE["HARDWARE STATIC ARCHITECTURE<br/>Temperature Monitoring System"]
+
+    subgraph HARDWARE["TARGET HARDWARE"]
+        SENSOR["Temperature Sensor"]
+        ADC["ADC Channel"]
+        TIMER["Timer Peripheral"]
+        MCU(("Microcontroller"))
+        GREEN["Green LED"]
+        YELLOW["Yellow LED"]
+        RED["Red LED"]
+        EEPROM[("EEPROM")]
+    end
+
+    SENSOR -->|"Analog signal"| ADC
+    ADC -->|"Digital raw ADC value"| MCU
+    TIMER -.->|"100 µs interrupt"| MCU
+    MCU -->|"GPIO"| GREEN
+    MCU -->|"GPIO"| YELLOW
+    MCU -->|"GPIO"| RED
+    MCU <-->|"I2C<br/>HW Revision + Serial Number"| EEPROM
+
+    TITLE --> HARDWARE

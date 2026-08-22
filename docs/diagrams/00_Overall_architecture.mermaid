@@ -1,0 +1,164 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'background': '#ffffff',
+    'primaryColor': '#ffffff',
+    'primaryBorderColor': '#000000',
+    'primaryTextColor': '#000000',
+    'lineColor': '#000000',
+    'secondaryColor': '#ffffff',
+    'tertiaryColor': '#ffffff',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000',
+    'edgeLabelBackground': '#ffffff',
+    'mainBkg': '#ffffff',
+    'nodeTextColor': '#000000',
+    'noteBkgColor': '#ffffff',
+    'noteBorderColor': '#000000',
+    'noteTextColor': '#000000',
+    'actorBkg': '#ffffff',
+    'actorBorder': '#000000',
+    'actorTextColor': '#000000',
+    'actorLineColor': '#000000',
+    'signalColor': '#000000',
+    'signalTextColor': '#000000',
+    'labelBoxBkgColor': '#ffffff',
+    'labelBoxBorderColor': '#000000',
+    'labelTextColor': '#000000',
+    'loopTextColor': '#000000',
+    'activationBkgColor': '#ffffff',
+    'activationBorderColor': '#000000',
+    'sequenceNumberColor': '#000000',
+    'classText': '#000000',
+    'altBackground': '#ffffff',
+    'fontFamily': 'Helvetica'
+  }
+}}%%
+
+graph TB
+
+    TITLE["TEMPERATURE MONITORING SYSTEM<br/>OVERALL ARCHITECTURE"]
+
+    subgraph HW["HARDWARE"]
+
+        SENSOR["Temperature Sensor"]
+
+        ADC["ADC"]
+
+        TIMER["100 µs Timer"]
+
+        MCU["Microcontroller"]
+
+        GPIO["GPIO"]
+
+        LEDG["Green LED"]
+        LEDY["Yellow LED"]
+        LEDR["Red LED"]
+
+        EEPROM["I2C EEPROM<br/>Hardware Revision + Serial Number"]
+
+    end
+
+
+    SENSOR -->|"Analog signal"| ADC
+    ADC -->|"Raw ADC value"| MCU
+    TIMER -.->|"100 µs interrupt"| MCU
+
+    MCU --> GPIO
+
+    GPIO --> LEDG
+    GPIO --> LEDY
+    GPIO --> LEDR
+
+    MCU <-->|"I2C"| EEPROM
+
+
+    subgraph SW["EMBEDDED SOFTWARE"]
+
+        subgraph C_IMPL["C IMPLEMENTATION"]
+
+            C_MAIN["main.c<br/>Application / Main Loop"]
+
+            C_ISR["isr.c<br/>100 µs Timer ISR"]
+
+            C_SENSOR["temp_sensor.c<br/>Temperature Sensor"]
+
+            C_CLASSIFY["temperature_classifier.c<br/>Temperature Classification"]
+
+            C_LED["led_controller.c<br/>LED Controller"]
+
+            C_HAL["C HAL<br/>ADC / GPIO / EEPROM"]
+
+        end
+
+
+        subgraph CPP_IMPL["C++ IMPLEMENTATION"]
+
+            CPP_ISR["TimerIsr"]
+
+            CPP_MON["TemperatureMonitor"]
+
+            CPP_SENSOR["TemperatureSensor"]
+
+            CPP_STRATEGY["Sensor Resolution Strategy"]
+
+            CPP_CLASSIFY["TemperatureClassifier"]
+
+            CPP_LED["LedController"]
+
+            CPP_HAL["C++ Interfaces<br/>IAdc / IGpio / IEeprom"]
+
+        end
+
+    end
+
+
+    C_ISR -->|"Timer event"| C_MAIN
+    C_MAIN --> C_SENSOR
+    C_MAIN --> C_CLASSIFY
+    C_MAIN --> C_LED
+
+    C_SENSOR --> C_HAL
+    C_LED --> C_HAL
+
+    C_HAL -->|"Hardware access"| MCU
+
+
+    CPP_ISR -->|"onTimerTick()"| CPP_MON
+
+    CPP_MON --> CPP_SENSOR
+    CPP_SENSOR --> CPP_STRATEGY
+
+    CPP_MON --> CPP_CLASSIFY
+    CPP_MON --> CPP_LED
+
+    CPP_SENSOR --> CPP_HAL
+    CPP_LED --> CPP_HAL
+
+    CPP_HAL -->|"Hardware access"| MCU
+
+
+    subgraph FLOW["COMMON FUNCTIONAL FLOW"]
+
+        F1["100 µs Sampling"]
+
+        F2["Raw ADC Value"]
+
+        F3["Raw → °C"]
+
+        F4["Temperature Classification"]
+
+        F5["LED Status"]
+
+    end
+
+
+    F1 --> F2
+    F2 --> F3
+    F3 --> F4
+    F4 --> F5
+
+
+    TITLE --> HW
+    TITLE --> SW
+    SW --> FLOW

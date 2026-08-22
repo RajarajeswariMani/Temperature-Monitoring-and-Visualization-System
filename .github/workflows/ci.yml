@@ -1,0 +1,36 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  c:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build C demo
+        run: cd c && make
+      - name: Run C demo
+        run: cd c && ./temp_monitor_demo
+      - name: Run C unit tests
+        run: cd c && make test
+
+  cpp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build C++ demo (Make)
+        run: cd cpp && make
+      - name: Run C++ demo
+        run: cd cpp && ./temp_monitor_cpp_demo
+      - name: Run C++ unit tests (Make)
+        run: cd cpp && make test
+      - name: Build + test with CMake (alternative path)
+        run: |
+          cd cpp
+          cmake -S . -B build
+          cmake --build build
+          ctest --test-dir build --output-on-failure

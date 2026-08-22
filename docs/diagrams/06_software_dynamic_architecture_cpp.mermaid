@@ -1,0 +1,102 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'background': '#ffffff',
+    'primaryColor': '#ffffff',
+    'primaryBorderColor': '#000000',
+    'primaryTextColor': '#000000',
+    'lineColor': '#000000',
+    'secondaryColor': '#ffffff',
+    'tertiaryColor': '#ffffff',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000',
+    'edgeLabelBackground': '#ffffff',
+    'mainBkg': '#ffffff',
+    'nodeTextColor': '#000000',
+    'noteBkgColor': '#ffffff',
+    'noteBorderColor': '#000000',
+    'noteTextColor': '#000000',
+    'actorBkg': '#ffffff',
+    'actorBorder': '#000000',
+    'actorTextColor': '#000000',
+    'actorLineColor': '#000000',
+    'signalColor': '#000000',
+    'signalTextColor': '#000000',
+    'labelBoxBkgColor': '#ffffff',
+    'labelBoxBorderColor': '#000000',
+    'labelTextColor': '#000000',
+    'loopTextColor': '#000000',
+    'activationBkgColor': '#ffffff',
+    'activationBorderColor': '#000000',
+    'sequenceNumberColor': '#000000',
+    'classText': '#000000',
+    'altBackground': '#ffffff',
+    'fontFamily': 'Helvetica'
+  }
+}}%%
+
+sequenceDiagram
+
+    participant TIMER as Timer Peripheral
+    participant ISR as TimerIsr
+    participant MON as TemperatureMonitor
+    participant ADC as IAdc
+    participant SENSOR as TemperatureSensor
+    participant STRATEGY as ISensorResolutionStrategy
+    participant CLASS as TemperatureClassifier
+    participant LED as LedController
+    participant GPIO as IGpio
+
+    Note over TIMER,MON: INTERRUPT CONTEXT - every 100 µs
+
+    TIMER->>ISR: Timer interrupt
+    ISR->>MON: onTimerTick()
+
+    MON->>ADC: readRaw()
+    ADC-->>MON: Raw ADC value
+
+    MON->>MON: latchedRaw_ = raw
+    MON->>MON: sampleReady = true
+
+    MON-->>ISR: Return
+    ISR-->>TIMER: Return
+
+    Note over MON,GPIO: MAIN-LOOP / APPLICATION CONTEXT
+
+    loop Application main loop
+
+        MON->>MON: isSampleReady()
+
+        alt Sample ready
+
+            MON->>MON: Read latchedRaw_
+            MON->>MON: Clear sampleReady
+
+            MON->>SENSOR: convert(raw)
+
+            SENSOR->>STRATEGY: convert(raw)
+
+            alt Hardware Revision = Rev-A
+                STRATEGY-->>SENSOR: raw × 1.0
+            else Hardware Revision = Rev-B
+                STRATEGY-->>SENSOR: raw × 0.1
+            end
+
+            SENSOR-->>MON: Temperature °C
+
+            MON->>CLASS: classify(tempC)
+            CLASS-->>MON: TempStatus
+
+            MON->>LED: update(status)
+
+            LED->>GPIO: setLed(Green, state)
+            LED->>GPIO: setLed(Yellow, state)
+            LED->>GPIO: setLed(Red, state)
+
+        else No sample ready
+
+            MON->>MON: Return to main loop
+
+        end
+
+    end

@@ -1,0 +1,130 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'background': '#ffffff',
+    'primaryColor': '#ffffff',
+    'primaryBorderColor': '#000000',
+    'primaryTextColor': '#000000',
+    'lineColor': '#000000',
+    'secondaryColor': '#ffffff',
+    'tertiaryColor': '#ffffff',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000',
+    'edgeLabelBackground': '#ffffff',
+    'mainBkg': '#ffffff',
+    'nodeTextColor': '#000000',
+    'noteBkgColor': '#ffffff',
+    'noteBorderColor': '#000000',
+    'noteTextColor': '#000000',
+    'actorBkg': '#ffffff',
+    'actorBorder': '#000000',
+    'actorTextColor': '#000000',
+    'actorLineColor': '#000000',
+    'signalColor': '#000000',
+    'signalTextColor': '#000000',
+    'labelBoxBkgColor': '#ffffff',
+    'labelBoxBorderColor': '#000000',
+    'labelTextColor': '#000000',
+    'loopTextColor': '#000000',
+    'activationBkgColor': '#ffffff',
+    'activationBorderColor': '#000000',
+    'sequenceNumberColor': '#000000',
+    'classText': '#000000',
+    'altBackground': '#ffffff',
+    'fontFamily': 'Helvetica'
+  }
+}}%%
+
+graph TB
+
+    TITLE["SYSTEM STATIC ARCHITECTURE<br/>Temperature Monitoring System"]
+
+
+    subgraph HW["TARGET HARDWARE"]
+
+        SENSOR["Temperature Sensor"]
+
+        ADC["ADC Peripheral"]
+
+        TIMER["100 µs Timer"]
+
+        MCU(("Microcontroller"))
+
+        GPIO["GPIO"]
+
+        LEDS["Status LEDs<br/>Green / Yellow / Red"]
+
+        EEPROM[("I2C EEPROM<br/>HW Revision + Serial Number")]
+
+    end
+
+
+    subgraph SW["EMBEDDED SOFTWARE"]
+
+        ISR["100 µs Timer ISR"]
+
+        MON["Temperature Monitoring"]
+
+        SENSOR_DRV["Temperature Sensor"]
+
+        STRATEGY["Sensor Resolution Strategy<br/>Rev-A / Rev-B"]
+
+        CLASSIFY["Temperature Classifier"]
+
+        LEDCTRL["LED Controller"]
+
+        HAL["Hardware Abstraction"]
+
+    end
+
+
+    SENSOR -->|"Analog signal"| ADC
+
+    ADC -->|"Raw ADC value"| MCU
+
+    TIMER -.->|"100 µs interrupt"| MCU
+
+    MCU --> GPIO
+
+    GPIO --> LEDS
+
+    MCU <-->|"I2C"| EEPROM
+
+
+    TIMER -.->|"Triggers"| ISR
+
+    ISR -->|"Latch raw value + set sample-ready"| MON
+
+
+    MON -->|"Raw ADC"| SENSOR_DRV
+
+    SENSOR_DRV -->|"Uses"| STRATEGY
+
+    STRATEGY -->|"Temperature °C"| SENSOR_DRV
+
+    SENSOR_DRV -->|"Temperature °C"| MON
+
+
+    MON -->|"Temperature"| CLASSIFY
+
+    CLASSIFY -->|"TempStatus"| MON
+
+
+    MON -->|"Status"| LEDCTRL
+
+
+    SENSOR_DRV -->|"ADC dependency"| HAL
+
+    LEDCTRL -->|"GPIO dependency"| HAL
+
+    MON -->|"ADC dependency"| HAL
+
+
+    HAL -->|"ADC / GPIO / EEPROM hardware access"| MCU
+
+    HAL -.->|"Configuration"| EEPROM
+
+
+    TITLE --> HW
+
+    TITLE --> SW

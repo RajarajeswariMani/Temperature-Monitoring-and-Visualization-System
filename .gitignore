@@ -1,0 +1,17 @@
+# Build output
+build/
+*.o
+*.obj
+temp_monitor_demo
+temp_monitor_tests
+temp_monitor_cpp_demo
+
+temp_monitor_cpp_tests
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
