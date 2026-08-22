@@ -69,7 +69,7 @@ Actual MCU timer accuracy, interrupt jitter, ADC sampling timing, and ISR execut
 | TC-14 | SYS-1, SYS-4, SW-2, SW-3, SW-7                                                      | Verify C and C++ implementations produce equivalent temperature, status, and LED behavior for equivalent input sequences.                                                      | Manual comparison                   | PASS    |
 | TC-15 | SYS-4, SW-6, SW-7                                                                   | Verify both C and C++ projects compile cleanly using `-Wall -Wextra -Wpedantic`.                                                                                               | Build test                          | PASS    |
 | TC-16 | SYS-2, HW-1, HW-2, HW-3, HW-4, HW-5, SW-1, SW-2, SW-3, SW-4, SW-5, SW-6, SW-7, SW-8 | Verify the overall, static, and dynamic architecture diagrams are consistent with the implemented hardware and software design.                                                | Manual architecture review          | PASS    |
-| TC-17 | SYS-5                                                                               | Verify the public GitHub repository contains source code, tests, requirements, test plan, documentation, and diagrams, and that both projects can be built from a clean clone. | Repository/process check            | PENDING |
+| TC-17 | SYS-5                                                                               | Verify the public GitHub repository contains source code, tests, requirements, test plan, documentation, and diagrams, and that both projects can be built from a clean clone. | Repository/process check            | PASS |
 
 ---
 
@@ -667,9 +667,7 @@ Both implementations shall then be built from the clean clone using their docume
 
 ### Result
 
-**PENDING**
-
-This test shall be marked **PASS** after final GitHub publication and clean-clone verification.
+**PASS**
 
 ---
 
@@ -750,8 +748,8 @@ The final repository shall not be considered fully verified until `TC-17` has be
 | C/C++ behavioral comparison   | PASS                     |
 | Compiler warning verification | PASS                     |
 | Architecture review           | PASS                     |
-| Public GitHub repository      | PENDING                  |
-| Clean-clone verification      | PENDING                  |
+| Public GitHub repository      | PASS                     |
+| Clean-clone verification      | PASS                     |
 | Target MCU timing/jitter      | Target hardware activity |
 
 ---
