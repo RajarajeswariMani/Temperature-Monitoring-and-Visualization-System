@@ -38,6 +38,8 @@ The test plan covers verification activities from **TC-01 through TC-17**.
 * PC / Linux / WSL
 * Mocked hardware interfaces
 * Make
+* CMake
+* CTest
 
 ### Hardware
 
