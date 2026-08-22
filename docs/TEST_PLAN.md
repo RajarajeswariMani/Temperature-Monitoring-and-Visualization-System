@@ -669,6 +669,16 @@ Both implementations shall then be built from the clean clone using their docume
 
 **PASS**
 
+**Clean-clone verification evidence:**
+
+- Repository cloned from GitHub into a clean directory.
+- C build completed successfully.
+- C unit tests: 11/11 passed.
+- C++ configured using CMake.
+- C++ build completed successfully.
+- C++ unit tests: 10/10 passed.
+- No pre-existing build artifacts were required.
+
 ---
 
 # 5. Test Coverage Summary
@@ -728,8 +738,6 @@ A test case is considered **PASS** when the observed behavior satisfies its defi
 A test case is considered **FAIL** when the implementation does not satisfy the expected result.
 
 A test case is considered **PENDING** when the required verification activity has not yet been performed.
-
-The final repository shall not be considered fully verified until `TC-17` has been completed successfully.
 
 ---
 
